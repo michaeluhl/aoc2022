@@ -27,6 +27,11 @@
             "deps": []
         },
         {
+            "root_module": "07/problem_07.rs",
+            "edition": "2021",
+            "deps": []
+        },
+        {
             "root_module": "09/problem_09.rs",
             "edition": "2021",
             "deps": []
