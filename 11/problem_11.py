@@ -1,3 +1,4 @@
+import math
 import operator
 import sys
 
@@ -12,6 +13,8 @@ op_map = {
 
 class Monkey:
 
+    cdiv = 1
+
     def __init__(self):
         self.items = []
         self.test_divisor = 1
@@ -20,18 +23,17 @@ class Monkey:
         self.op = lambda x: x
         self.i_ct = 0
 
-    def inspect(self):
-        self.i_ct += len(self.items)
-        self.items = [self.op(v) for v in self.items]
-
-    def relax(self):
-        self.items = [v//self.relax_level for v in self.items]
-
     def throw(self, monkeys):
+        ttgt = self.targets[True]
+        ftgt = self.targets[False]
+        self.i_ct += len(self.items)
         for item in self.items:
-            tgt = self.targets[item % self.test_divisor == 0]
-            monkeys[tgt].items.append(item)
-        self.items = []
+            item = self.op(item) // self.relax_level
+            if item % self.test_divisor == 0:
+                monkeys[ttgt].items.append(item % self.cdiv)
+            else:
+                monkeys[ftgt].items.append(item % self.cdiv)
+        del self.items[:]
 
     @classmethod
     def parse_operation(cls, expr):
@@ -86,11 +88,11 @@ if __name__ == "__main__":
             pass
 
     monkeys = dict(monkeys)
+    cdiv = math.prod([m.test_divisor for m in monkeys.values()])
+    Monkey.cdiv = cdiv
 
     for r in range(options.n_rounds):
         for _, m in sorted(monkeys.items()):
-            m.inspect()
-            m.relax()
             m.throw(monkeys)
 
     tops = [v.i_ct for v in sorted(monkeys.values(), key=lambda v: v.i_ct, reverse=True)][:2]
