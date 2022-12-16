@@ -27,13 +27,37 @@ def plot(shape, start, end, prev):
         print(''.join(row))
 
 
-def unwind(end, prev, grid, tgt):
-    node = end
-    while prev[node]:
-        node = prev[node]
-        if grid[node[0], node[1]] == tgt:
-            break
-    return node
+def route(start, shape, check_fun, end_fun):
+    maxval = np.prod(shape)
+    dist = defaultdict(lambda: maxval)
+    dist[start] = 0
+    prev = defaultdict(lambda: None)
+    visited = set()
+    nend = None
+
+    q = {start: 0}
+
+    while q:
+        node = sorted(q.items(), key=lambda p: p[1])[0][0]
+        del q[node]
+        visited.add(node)
+        for dr, dc in ((-1, 0), (1, 0), (0, 1), (0, -1)):
+            v = node[0] + dr, node[1] + dc
+            if v in visited or any([i < 0 for i in v]) or any([i >= j for i, j in zip(v, shape)]):
+                continue
+            if check_fun(node, v):
+                alt = dist[node] + 1
+                if alt <= dist[v]:
+                    dist[v] = alt
+                    q[v] = alt
+                    prev[v] = node
+                if end_fun(v):
+                    nend = v
+                    break
+        else:
+            continue
+        break
+    return nend, prev, dist
 
 
 start = None
@@ -61,39 +85,21 @@ grid[start] = a
 print("Start and End Found")
 print("Grid Size: {}", grid.shape)
 
-maxval = np.prod(grid.shape)
-dist = defaultdict(lambda: maxval)
-dist[start] = 0
-prev = defaultdict(lambda: None)
-visited = set()
+(nend, prev, dist) = route(start, 
+                           grid.shape, 
+                           lambda n, v: grid[v[0], v[1]] - grid[n[0], n[1]] <= 1,
+                           lambda e: e == end)
 
-q = {start: 0}
-
-while q:
-    node = sorted(q.items(), key=lambda p: p[1])[0][0]
-    del q[node]
-    visited.add(node)
-    for dr, dc in ((-1, 0), (1, 0), (0, 1), (0, -1)):
-        v = node[0] + dr, node[1] + dc
-        if v in visited or any([i < 0 for i in v]) or any([i >= j for i, j in zip(v, grid.shape)]):
-            continue
-        if grid[v[0], v[1]] - grid[node[0], node[1]] <= 1:
-            alt = dist[node] + 1
-            if alt <= dist[v]:
-                dist[v] = alt
-                q[v] = alt
-                prev[v] = node
-            if v == end:
-                break
-    else:
-        continue
-    break
 
 print(dist[end])
-print(prev[end])
 plot(grid.shape, start, end, prev)
 
 print(50*'-')
 
-nstart = unwind(end, prev, grid, a)
-plot(grid.shape, nstart, end, prev)
+(nend, prev, dist) = route(end, 
+                           grid.shape, 
+                           lambda n, v: grid[v[0], v[1]] - grid[n[0], n[1]] >= -1,
+                           lambda e: grid[e[0], e[1]] == a)
+
+print(dist[nend])
+plot(grid.shape, end, nend, prev)
