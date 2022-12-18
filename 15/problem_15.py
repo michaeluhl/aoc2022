@@ -13,6 +13,19 @@ def eval_line(data, radii, line):
     print(len(posns))
 
 
+def draw_ball(cx, cy, rad, zone):
+    ball = set()
+    for j, i in zip(range(-rad, 1), range(0, rad+1)):
+        points = [
+                (cx + i, cy + j), 
+                (cx + j, cy + i),
+                (cx - i, cy + j),
+                (cx - j, cy + i)
+        ]
+        ball.update([(px, py) for px, py in points if 0 <= px <= zone and 0 <= py <= zone])
+    return ball
+
+
 if __name__ == "__main__":
     import argparse
 
@@ -49,3 +62,17 @@ if __name__ == "__main__":
 
     print((xmin, ymin), (xmax, ymax))
     eval_line(data, radii, options.line)
+
+    if options.zone:
+        candidates = set()
+        for (sx, sy), srad in zip(data[:, :2], radii):
+            candidates.update(draw_ball(sx, sy, srad + 1, options.zone))
+            for (cx, cy), rad in zip(data[:, :2], radii):
+                cull = set()
+                for tx, ty in candidates:
+                    if abs(tx - cx) + abs(ty - cy) <= rad:
+                        cull.add((tx, ty))
+                candidates -= cull
+        print(candidates)
+        cx, cy = candidates.pop()
+        print(4000000*cx + cy)
