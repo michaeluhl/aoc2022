@@ -45,6 +45,12 @@
             "root_module": "12/problem_12.rs",
             "edition": "2021",
             "deps": []
+        },
+        {
+            "root_module": "20/problem_20.rs",
+            "edition": "2021",
+            "deps": []
         }
+
     ]
 }
